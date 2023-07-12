@@ -1,0 +1,4 @@
+*.txt
+!./chatbots/requirements.txt
+*.log
+config.py
