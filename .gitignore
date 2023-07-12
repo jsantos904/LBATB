@@ -2,3 +2,4 @@
 !chatbots/requirements.txt
 *.log
 config.py
+.DS_Store
