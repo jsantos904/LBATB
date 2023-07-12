@@ -1,4 +1,4 @@
 *.txt
-!./chatbots/requirements.txt
+!chatbots/requirements.txt
 *.log
 config.py
