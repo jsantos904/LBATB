@@ -50,8 +50,9 @@ class Bot:
         if message.strip().startswith(BOT_NAME):
             command, args = self.parse_message(message)
             if command is None:
-                return
-            self.command_handlers.get(command, self.handle_python_command)(args, user_id)
+                self.handle_python_command(args, user_id)
+            else:
+                self.command_handlers[command]()
 
     def clean_code(self, code):
         return code.replace(BOT_NAME, '').strip()

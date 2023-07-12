@@ -49,6 +49,7 @@ class ChatBotApp:
 
     def webhook(self):
         data = request.get_json()
+        text = data['text']
         if data['name'] != 'ai':
             text = data['text'].split('@ai', 1)[1].strip() if '@ai' in text else data['text']
 
