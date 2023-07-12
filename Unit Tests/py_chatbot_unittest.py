@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import patch
-from py_chatbot import Bot  # replace with the name of your Python file
+from ..py_chatbot import Bot  
 
 class TestBot(unittest.TestCase):
     def setUp(self):
