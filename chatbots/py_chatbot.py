@@ -50,6 +50,7 @@ class Bot:
         if message.strip().startswith(BOT_NAME):
             command, args = self.parse_message(message)
             if command is None:
+                self.history.append({'role': 'user', 'content': message})  
                 self.handle_python_command(args, user_id)
             else:
                 self.command_handlers[command]()
@@ -70,13 +71,13 @@ class Bot:
 
     def handle_ping_command(self):
         self.post_message('Bot is up and running!')
-
+        
     def handle_python_command(self, args, user_id):
         output, formatted_output = self.execute_code(args)
         if formatted_output is not None:
+            self.history.append({'role': 'assistant', 'content': output}) 
+            self.save_chat_history()
             self.post_message(formatted_output)
-            self.history.append({'assistant': output})
-        self.save_chat_history()
 
     def clear_vars(self):
         self.limited_locals.clear()
@@ -98,8 +99,9 @@ class Bot:
         self.post_message(help_message)
 
     def save_chat_history(self):
-        with open('chat_history.txt', 'w') as f:
-            f.writelines("%s\n" % item for item in self.history)
+        with open('chat_history.json', 'w') as f:
+            json.dump(self.history, f)
+
 
 app = Flask(__name__)
 bot = Bot(PY_CHATBOTID)

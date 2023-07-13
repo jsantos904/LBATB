@@ -82,7 +82,7 @@ class ChatBotApp:
             self.send_message(help_text)
 
     def handle_why_command(self):
-        with open("chat_history.txt", "r") as file:
+        with open("chat_history.json", "r") as file:
             chat_history = json.load(file)
             last_two_items = chat_history[-2:]
             last_two_items.append({"user" : "Please explain this error and provide an example on the correct way to fix it."})
