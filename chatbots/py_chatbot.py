@@ -79,7 +79,7 @@ class PyBot:
         return code.replace(PYBOT_NAME, '').strip()
 
     def handle_ping_command(self):
-        self.post_message('Bot is up and running!')
+        self.post_message('PyBot is up and running!')
 
     def handle_python_command(self, args, user_id):
         output, formatted_output = self.execute_code(args)
@@ -100,11 +100,11 @@ class PyBot:
         commands = [
             {'command': '!clear', 'description': 'Clears all variables.'},
             {'command': '!list', 'description': 'Lists all variables and their values.'},
-            {'command': f"{PYBOT_NAME} <code>", 'description': 'Executes the Python code.'},
-            {'command': '!ping', 'description': 'Checks if the bot is up and running.'},
+            {'command': f'{PYBOT_NAME} <code>', 'description': 'Executes the Python code.'},
+            {'command': '!ping', 'description': 'Checks if the pybot serveris up and running.'},
             {'command': '!help', 'description': 'Displays this help message.'}
         ]
-        help_message = "Available commands:\n" + "\n".join(f"{command['command']}: {command['description']}" for command in commands)
+        help_message = "Available commands for pybot:\n" + "\n".join(f"{command['command']}: {command['description']}" for command in commands)
         self.post_message(help_message)
 
     def save_chat_history(self):
