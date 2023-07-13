@@ -10,7 +10,7 @@ import requests
 from config import PY_CHATBOTID
 
 POST_URL = 'https://api.groupme.com/v3/bots/post'
-BOT_NAME = "@py"
+PYBOT_NAME = "@py"
 PYBOT_USERID = "879523"
 
 class CommandType(Enum):
@@ -19,7 +19,7 @@ class CommandType(Enum):
     LISTVARS = '!list'
     HELP = '!help'
 
-class Bot:
+class PyBot:
     def __init__(self, bot_id):
         self.bot_id = bot_id
         self.limited_locals = {}
@@ -30,7 +30,34 @@ class Bot:
             CommandType.LISTVARS: self.list_vars,
             CommandType.HELP: self.help,
         }
+        self.app = Flask(__name__)
+        self.app.route('/', methods=['POST'])(self.webhook)
 
+    def webhook(self):
+        data = request.get_json()
+        self.process_message(data['user_id'], data['text'])
+        return "ok", 200
+    
+    def process_message(self, user_id, text):   
+        if text.strip().startswith(PYBOT_NAME):
+            command, args = self.parse_message(text)
+            if command is None:
+                self.history.append({'role': 'user', 'content': text})  
+                self.handle_python_command(args, user_id)
+            else:
+                self.command_handlers[command]()
+                
+    def parse_message(self, message):
+        cleaned_message = self.clean_code(message)
+        split_message = cleaned_message.strip().split(' ', 1)
+        try:
+            command = CommandType(split_message[0])
+            args = split_message[1] if len(split_message) > 1 else None
+        except ValueError:
+            command = None
+            args = cleaned_message
+        return command, args
+    
     def post_message(self, text, mention=False):
         data = {'bot_id': self.bot_id, 'text': str(text)}
         requests.post(POST_URL, json=data)
@@ -48,32 +75,12 @@ class Bot:
             formatted_traceback = "\n".join(traceback_message.splitlines()[-2:])
             return traceback_message, formatted_traceback
 
-    def process_message(self, user_id, name, message):   # name isn't being used, but might use it later
-        if user_id == PYBOT_USERID:
-            command, args = self.parse_message(message)
-            if command is None:
-                self.history.append({'role': 'user', 'content': message})  
-                self.handle_python_command(args, user_id)
-            else:
-                self.command_handlers[command]()
-
     def clean_code(self, code):
-        return code.replace(BOT_NAME, '').strip()
-
-    def parse_message(self, message):
-        cleaned_message = self.clean_code(message)
-        split_message = cleaned_message.strip().split(' ', 1)
-        try:
-            command = CommandType(split_message[0])
-            args = split_message[1] if len(split_message) > 1 else None
-        except ValueError:
-            command = None
-            args = cleaned_message
-        return command, args
+        return code.replace(PYBOT_NAME, '').strip()
 
     def handle_ping_command(self):
         self.post_message('Bot is up and running!')
-        
+
     def handle_python_command(self, args, user_id):
         output, formatted_output = self.execute_code(args)
         if formatted_output is not None:
@@ -93,7 +100,7 @@ class Bot:
         commands = [
             {'command': '!clear', 'description': 'Clears all variables.'},
             {'command': '!list', 'description': 'Lists all variables and their values.'},
-            {'command': f"{BOT_NAME} <code>", 'description': 'Executes the Python code.'},
+            {'command': f"{PYBOT_NAME} <code>", 'description': 'Executes the Python code.'},
             {'command': '!ping', 'description': 'Checks if the bot is up and running.'},
             {'command': '!help', 'description': 'Displays this help message.'}
         ]
@@ -104,16 +111,10 @@ class Bot:
         with open('chat_history.json', 'w') as f:
             json.dump(self.history, f)
 
-
-app = Flask(__name__)
-bot = Bot(PY_CHATBOTID)
-
-@app.route('/', methods=['POST'])
-def webhook():
-    data = request.get_json()
-    bot.process_message(data['user_id'], data['name'], data['text'])
-  
-    return "ok", 200
+    def run(self, host='0.0.0.0', port=5020):
+        self.app.run(host=host, port=port, debug=True)
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5020, debug=True)
+    bot = PyBot(PY_CHATBOTID)
+    bot.run()
+    
