@@ -69,6 +69,8 @@ class AiBot:
             text = text.split('@ai', 1)[1].strip()  # Remove '@ai' from the start of the message
             if text.lower() in [c.value for c in CommandType]:  
                 self.handle_command(CommandType(text.lower()))  
+                return
+            else:
                 self.handle_text(text)
 
     def handle_command(self, command):
