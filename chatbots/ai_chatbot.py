@@ -98,7 +98,7 @@ class AiBot:
             chat_history = json.load(file)
             if self.is_last_message_error(chat_history):
                 last_two_items = chat_history[-2:]
-                last_two_items.append({"user" : "Could you please interpret the nature of this error message? Additionally, please illustrate an appropriate solution, including a code example demonstrating the correct approach."})
+                last_two_items.append({"role": "user", "content" : "Could you please interpret the nature of this error message? Additionally, please illustrate an appropriate solution, including a code example demonstrating the correct approach."})
                 messages = [{'role': 'system', 'content': SYSTEM_PROMPT}]
                 messages.extend(last_two_items)
                 response_text = self.get_response_text(messages)
