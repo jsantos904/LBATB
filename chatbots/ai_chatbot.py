@@ -11,11 +11,14 @@ from config import OPENAI_API_KEY, AI_CHATBOTID
 SYSTEM_PROMPT = """
 Act as a Python teacher. Answer any python coding related questions as if the student is a beginner. Replace any 3 backticks with 25 dashes. 
 """
+HISTORY_TOKEN_LIMIT = 2000
+OUTPUT_TOKEN_LIMIT = 500
+AIBOT_USERID = '879522'
 
 class Conversation:
-    def __init__(self, tokenizer, history_token_limit=2000):
+    def __init__(self, tokenizer):
         self.tokenizer = tokenizer
-        self.history_token_limit = history_token_limit
+        self.history_token_limit = HISTORY_TOKEN_LIMIT
         self.conversation_history = self.load_conversation()
 
     def save_conversation(self):
@@ -26,7 +29,7 @@ class Conversation:
         try:
             with open('conversation.json', 'r') as file:
                 return json.load(file)
-        except FileNotFoundError:
+        except FileNotFoundError:       # If the file doesn't exist, return an empty list
             return []
 
     def add_message_to_history(self, role, content):
@@ -40,25 +43,22 @@ class Conversation:
         return len(self.tokenizer.encode(tokens))
 
 class ChatBotApp:
-    def __init__(self, openai, conversation, output_token_limit=500):
+    def __init__(self, openai, conversation):
         self.app = Flask(__name__)
         self.openai = openai
         self.conversation = conversation
-        self.output_token_limit = output_token_limit
+        self.output_token_limit = OUTPUT_TOKEN_LIMIT
         self.app.route('/', methods=['POST'])(self.webhook)
 
     def webhook(self):
         data = request.get_json()
         text = data['text']
-        if data['name'] != 'ai' and text.strip().startswith('@ai'):
+        if data['user_id'] != AIBOT_USERID:
             text = text.split('@ai', 1)[1].strip()  # Remove '@ai' from the start of the message
             if text.lower() in ['!clear', '!ping', '!why', '!help']:
                 self.handle_command(text.lower())
             else:
                 self.handle_text(text)
-                
-        with open('data.json', 'w') as outfile:  # for testing
-            json.dump(data, outfile, indent=4)       # for testing
         
         return "ok", 200
 
@@ -79,20 +79,31 @@ class ChatBotApp:
             Here are the commands you can use:
             - `!clear`: Clears the conversation history.
             - `!ping`: Checks if the server is running.
-            - `!why`: Asks the bot to explain the last error and provide an example on how to fix it.
+            - `!why`: Explains the last error.
             """
             self.send_message(help_text)
 
     def handle_why_command(self):
-        with open("chat_history.json", "r") as file:
+        with open("chat_history.json", "r") as file: # this is a file that py_chatbot.py creates
             chat_history = json.load(file)
-            last_two_items = chat_history[-2:]
-            last_two_items.append({"user" : "Please explain this error and provide an example on the correct way to fix it."})
-            messages = [{'role': 'system', 'content': SYSTEM_PROMPT}]
-            messages.extend(last_two_items)
-            response_text = self.get_response_text(messages)
-            self.conversation.add_message_to_history('assistant', response_text)
-            self.send_message(response_text)
+            if self.is_last_message_error(chat_history):
+                last_two_items = chat_history[-2:]
+                last_two_items.append({"user" : "Could you please interpret the nature of this error message? Additionally, please illustrate an appropriate solution, including a code example demonstrating the correct approach."})
+                messages = [{'role': 'system', 'content': SYSTEM_PROMPT}]
+                messages.extend(last_two_items)
+                response_text = self.get_response_text(messages)
+                self.conversation.add_message_to_history('assistant', response_text)
+                self.send_message(response_text)
+            else:
+                self.send_message('The last message was not an error.')
+            
+    def is_last_message_error(self, chat_history):
+        last_message = chat_history[-1]['content'].lower()
+        error_keywords = ['error', 'exception', 'traceback']
+        for keyword in error_keywords:
+            if keyword in last_message:
+                return True
+        return False
 
     def handle_text(self, text):
         self.conversation.add_message_to_history('user', text)
@@ -109,8 +120,14 @@ class ChatBotApp:
             max_tokens=self.output_token_limit
         )
         response_text = response['choices'][0]['message']['content'].strip()
-        return re.sub(r'\n( {4})*', lambda match: '\n' + '>' * (len(match.group(0)) // 4), response_text)
+        
+        # I don't think we need the below code. I was trying to force replace an indent with > for groupme
+        # since it looked funky in the iphone app.
+        
+        # return re.sub(r'\n( {4})*', lambda match: '\n' + '>' * (len(match.group(0)) // 4), response_text)
 
+        return response_text
+    
     def send_message(self, msg):
         requests.post('https://api.groupme.com/v3/bots/post', params={'bot_id': AI_CHATBOTID, 'text': msg})
 

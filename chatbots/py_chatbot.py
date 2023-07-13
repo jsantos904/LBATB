@@ -11,6 +11,7 @@ from config import PY_CHATBOTID
 
 POST_URL = 'https://api.groupme.com/v3/bots/post'
 BOT_NAME = "@py"
+PYBOT_USERID = "879523"
 
 class CommandType(Enum):
     PING = '!ping'
@@ -48,7 +49,7 @@ class Bot:
             return traceback_message, formatted_traceback
 
     def process_message(self, user_id, name, message):   # name isn't being used, but might use it later
-        if message.strip().startswith(BOT_NAME):
+        if user_id == PYBOT_USERID:
             command, args = self.parse_message(message)
             if command is None:
                 self.history.append({'role': 'user', 'content': message})  
@@ -112,9 +113,6 @@ def webhook():
     data = request.get_json()
     bot.process_message(data['user_id'], data['name'], data['text'])
   
-    with open('data.json', 'w') as outfile:  # for testing
-        json.dump(data, outfile, indent=4)       # for testing
-    
     return "ok", 200
 
 if __name__ == "__main__":
