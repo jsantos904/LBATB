@@ -58,7 +58,7 @@ class ChatBotApp:
                 self.handle_text(text)
                 
         with open('data.json', 'w') as outfile:  # for testing
-        json.dump(data, outfile, indent=4)       # for testing
+            json.dump(data, outfile, indent=4)       # for testing
         
         return "ok", 200
 

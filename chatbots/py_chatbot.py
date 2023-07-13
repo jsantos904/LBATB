@@ -113,9 +113,9 @@ def webhook():
     bot.process_message(data['user_id'], data['name'], data['text'])
   
     with open('data.json', 'w') as outfile:  # for testing
-    json.dump(data, outfile, indent=4)       # for testing
+        json.dump(data, outfile, indent=4)       # for testing
     
     return "ok", 200
 
-if __name__ == "__main__":ß
+if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5020, debug=True)
