@@ -40,7 +40,7 @@ class Conversation:
         return len(self.tokenizer.encode(tokens))
 
 class ChatBotApp:
-    def __init__(self, openai, conversation, output_token_limit=150):
+    def __init__(self, openai, conversation, output_token_limit=500):
         self.app = Flask(__name__)
         self.openai = openai
         self.conversation = conversation
