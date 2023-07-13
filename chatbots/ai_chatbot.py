@@ -50,14 +50,12 @@ class ChatBotApp:
     def webhook(self):
         data = request.get_json()
         text = data['text']
-        if data['name'] != 'ai':
-            text = data['text'].split('@ai', 1)[1].strip() if '@ai' in text else data['text']
-
+        if data['name'] != 'ai' and text.strip().startswith('@ai'):
+            text = text.split('@ai', 1)[1].strip()  # Remove '@ai' from the start of the message
             if text.lower() in ['!clear', '!ping', '!why', '!help']:
                 self.handle_command(text.lower())
             else:
                 self.handle_text(text)
-
         return "ok", 200
 
     def handle_command(self, command):
