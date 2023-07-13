@@ -111,7 +111,11 @@ bot = Bot(PY_CHATBOTID)
 def webhook():
     data = request.get_json()
     bot.process_message(data['user_id'], data['name'], data['text'])
+  
+    with open('data.json', 'w') as outfile:  # for testing
+    json.dump(data, outfile, indent=4)       # for testing
+    
     return "ok", 200
 
-if __name__ == "__main__":
+if __name__ == "__main__":ß
     app.run(host='0.0.0.0', port=5020, debug=True)

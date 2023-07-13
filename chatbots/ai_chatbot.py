@@ -56,6 +56,10 @@ class ChatBotApp:
                 self.handle_command(text.lower())
             else:
                 self.handle_text(text)
+                
+        with open('data.json', 'w') as outfile:  # for testing
+        json.dump(data, outfile, indent=4)       # for testing
+        
         return "ok", 200
 
     def handle_command(self, command):
@@ -111,7 +115,7 @@ class ChatBotApp:
         requests.post('https://api.groupme.com/v3/bots/post', params={'bot_id': AI_CHATBOTID, 'text': msg})
 
     def run(self, host='0.0.0.0', port=5080):
-        self.app.run(host=host, port=port)
+        self.app.run(host=host, port=port, debug=True)
 
 if __name__ == "__main__":
     openai.api_key = OPENAI_API_KEY
