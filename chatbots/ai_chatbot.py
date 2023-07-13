@@ -147,6 +147,11 @@ class AiBot:
         
         # return re.sub(r'\n( {4})*', lambda match: '\n' + '>' * (len(match.group(0)) // 4), response_text)
 
+        # Replace three backticks or '```python' with 25 dashes on each line
+        lines = response_text.splitlines()
+        lines = [line.replace('```', '-'*25) if line.startswith('```') else line for line in lines]
+        response_text = '\n'.join(lines)
+
         return response_text
 
     def post_message(self, msg):
