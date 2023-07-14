@@ -73,7 +73,7 @@ class PyBot:
         except Exception as e:
             traceback_message = traceback.format_exc()
             formatted_traceback = "\n".join(traceback_message.splitlines()[-2:])
-            return traceback_message, formatted_traceback
+            raise Exception(f'Error executing code: {e}')
         
     def __safe_exec(self, code):
         allowed_modules = {'math', 'json', 're', 'random', 'datetime', 
@@ -92,7 +92,7 @@ class PyBot:
         safe_builtins['__import__'] = safe_import
         try:
             exec(code, {"__builtins__": safe_builtins}, self.limited_locals)
-        except Exception:
+        except Exception as e:
             raise Exception(f'Error executing code: {e}')
 
     def clean_code(self, code):
