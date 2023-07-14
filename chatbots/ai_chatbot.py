@@ -9,7 +9,7 @@ import tiktoken
 from config import OPENAI_API_KEY, AI_CHATBOTID
 
 SYSTEM_PROMPT = """
-Act as a Python teacher. Answer any python coding related questions as if the student is a beginner. 
+Act as a Python teacher. Answer any python coding related questions as if the student is a beginner. Keep your answers short.
 """
 HISTORY_TOKEN_LIMIT = 2000
 OUTPUT_TOKEN_LIMIT = 500
@@ -67,8 +67,9 @@ class AiBot:
     def process_message(self, user_id, text):
         if user_id != AIBOT_USERID and text.strip().startswith(AIBOT_NAME):  # this code doesnt check for a @ai command
             text = text.split('@ai', 1)[1].strip()  # Remove '@ai' from the start of the message
-            if text.lower() in [c.value for c in CommandType]:  
-                self.handle_command(CommandType(text.lower()))  
+            command = CommandType(text.lower()) if text.lower() in [c.value for c in CommandType] else None
+            if command:  
+                self.handle_command(command) 
                 return
             else:
                 self.handle_text(text)
@@ -135,6 +136,7 @@ class AiBot:
         self.post_message(response_text)
 
     def get_response_text(self, messages):
+        self.post_message("Thinking...")
         response = self.openai.ChatCompletion.create(
             model="gpt-3.5-turbo", 
             messages=messages,
