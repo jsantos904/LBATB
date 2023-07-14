@@ -66,7 +66,7 @@ class PyBot:
         try:
             stdout = io.StringIO()
             with contextlib.redirect_stdout(stdout):
-                exec(code, {"__builtins__": __builtins__}, self.limited_locals)
+                self.__safe_exec(code)
             output = stdout.getvalue()
             formatted_output = '-'*25 + '\n' + output + '\n' + '-'*25 if 'print' in code else output
             return output, formatted_output
@@ -74,6 +74,26 @@ class PyBot:
             traceback_message = traceback.format_exc()
             formatted_traceback = "\n".join(traceback_message.splitlines()[-2:])
             return traceback_message, formatted_traceback
+        
+    def __safe_exec(self, code):
+        allowed_modules = {'math', 'json', 're', 'random', 'datetime', 
+                        'time', 'collections', 'itertools', 'functools', 
+                        'heapq', 'bisect', 'copy', 'enum', 'fractions', 
+                        'decimal', 'statistics', 'operator'}  # The set of modules that are allowed
+        disallowed_builtins = {'open','eval'}  # The set of built-in functions that are not allowed
+
+        def safe_import(name, globals=None, locals=None, fromlist=(), level=0):
+            if name in allowed_modules:
+                return __import__(name, globals, locals, fromlist, level)
+            raise ImportError(f'Importing {name} is not allowed')
+
+        safe_builtins = {key: value for key, value in globals()["__builtins__"].__dict__.items()
+                        if key not in disallowed_builtins}
+        safe_builtins['__import__'] = safe_import
+        try:
+            exec(code, {"__builtins__": safe_builtins}, self.limited_locals)
+        except Exception:
+            raise Exception(f'Error executing code: {e}')
 
     def clean_code(self, code):
         return code.replace(PYBOT_NAME, '').strip()
