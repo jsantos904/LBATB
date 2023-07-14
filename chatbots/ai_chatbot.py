@@ -9,7 +9,7 @@ import tiktoken
 from config import OPENAI_API_KEY, AI_CHATBOTID
 
 SYSTEM_PROMPT = """
-Act as a Python teacher. Answer any python coding related questions as if the student is a beginner. Replace any 3 backticks with 25 dashes. 
+Act as a Python teacher. Answer any python coding related questions as if the student is a beginner. 
 """
 HISTORY_TOKEN_LIMIT = 2000
 OUTPUT_TOKEN_LIMIT = 500
@@ -98,7 +98,7 @@ class AiBot:
             chat_history = json.load(file)
             if self.is_last_message_error(chat_history):
                 last_two_items = chat_history[-2:]
-                last_two_items.append({"role": "user", "content" : "Could you please interpret the nature of this error message? Additionally, please illustrate an appropriate solution, including a code example demonstrating the correct approach."})
+                last_two_items.append({"role": "user", "content" : "Could you please interpret the nature of this error message? Additionally, please illustrate an appropriate solution, including a code example demonstrating the correct approach. Keep your answer somewhat short."})
                 messages = [{'role': 'system', 'content': SYSTEM_PROMPT}]
                 messages.extend(last_two_items)
                 response_text = self.get_response_text(messages)
