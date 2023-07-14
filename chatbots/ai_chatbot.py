@@ -156,7 +156,15 @@ class AiBot:
         return response_text
 
     def post_message(self, msg):
-        requests.post('https://api.groupme.com/v3/bots/post', params={'bot_id': AI_CHATBOTID, 'text': msg})
+        if len(msg) > 449:
+            chunks = self.split_message_into_chunks(msg)
+            for chunk in chunks:
+                requests.post('https://api.groupme.com/v3/bots/post', params={'bot_id': AI_CHATBOTID, 'text': chunk})
+        else:
+            requests.post('https://api.groupme.com/v3/bots/post', params={'bot_id': AI_CHATBOTID, 'text': msg})
+
+    def split_message_into_chunks(self, message, chunk_size=449):
+        return [message[i:i+chunk_size] for i in range(0, len(message), chunk_size)]
 
     def run(self, host='0.0.0.0', port=5080):
         self.app.run(host=host, port=port, debug=True)
