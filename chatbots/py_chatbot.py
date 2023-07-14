@@ -70,10 +70,10 @@ class PyBot:
             output = stdout.getvalue()
             formatted_output = '-'*25 + '\n' + output + '\n' + '-'*25 if 'print' in code else output
             return output, formatted_output
-        except Exception as e:
+        except Exception:
             traceback_message = traceback.format_exc()
             formatted_traceback = "\n".join(traceback_message.splitlines()[-2:])
-            raise Exception(f'Error executing code: {e}')
+            return traceback_message, formatted_traceback
         
     def __safe_exec(self, code):
         allowed_modules = {'math', 'json', 're', 'random', 'datetime', 
