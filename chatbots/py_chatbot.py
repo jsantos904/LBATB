@@ -68,7 +68,7 @@ class PyBot:
             with contextlib.redirect_stdout(stdout):
                 exec(code, {"__builtins__": __builtins__}, self.limited_locals)
             output = stdout.getvalue()
-            formatted_output = '-'*25 + '\n' + output or '' + '\n' + '-'*25 if 'print' in code else output
+            formatted_output = '-'*25 + '\n' + output + '\n' + '-'*25 if 'print' in code else output
             return output, formatted_output
         except Exception:
             traceback_message = traceback.format_exc()
