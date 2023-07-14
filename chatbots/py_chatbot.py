@@ -70,7 +70,7 @@ class PyBot:
             output = stdout.getvalue()
             formatted_output = '-'*25 + '\n' + output + '\n' + '-'*25 if 'print' in code else output
             return output, formatted_output
-        except Exception:
+        except Exception as e:
             traceback_message = traceback.format_exc()
             formatted_traceback = "\n".join(traceback_message.splitlines()[-2:])
             return traceback_message, formatted_traceback
