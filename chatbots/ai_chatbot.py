@@ -1,5 +1,6 @@
 from enum import Enum
 import json
+import time
 
 from flask import Flask, request
 import requests
@@ -58,6 +59,8 @@ class AiBot:
         self.app = Flask(__name__)
         self.output_token_limit = OUTPUT_TOKEN_LIMIT
         self.app.route('/', methods=['POST'])(self.webhook)
+        self.gpt4_requests = 0
+        self.first_gpt4_request = 0
 
     def webhook(self):
         data = request.get_json()
@@ -71,6 +74,9 @@ class AiBot:
             if command:  
                 self.handle_command(command) 
                 return
+            elif "use gpt4" in text.lower():
+                self.use_gpt4(text)
+                return       
             else:
                 self.handle_text(text)
 
@@ -115,7 +121,27 @@ class AiBot:
             if keyword in last_message:
                 return True
         return False
-
+    
+    def use_gpt4(self, text):
+        current_time = time.time()
+        # 600 seconds = 10 minutes, 900 seconds = 15 minutes, 1800 seconds = 30 minutes, 3600 seconds = 1 hour
+        if current_time - self.first_gpt4_request > 3600:
+            self.gpt4_requests = 0
+            self.first_gpt4_request = 0
+        if self.gpt4_requests > 10 and current_time - self.first_gpt4_request < 3600:
+            minutes_left = int((3600 - (current_time - self.first_gpt4_request)) / 60)
+            self.post_message(f"Sorry, only 10 GPT4 requests allowed per hour. Please try again in {minutes_left} minutes.")
+            return
+        else:
+            self.conversation.add_message_to_history('user', text)
+            messages = [{'role': 'system', 'content': SYSTEM_PROMPT},
+                        {'role': 'user', 'content': text}]
+            response_text = self.get_response_text(messages, gptmodel = "gpt-4-0613")
+            self.post_message(response_text)
+            self.gpt4_requests += 1
+            if self.gpt4_requests == 1:
+                self.first_gpt4_request = current_time
+            
     def help(self):
         commands = [
             {'command':'!clear', 'description': 'Clears the conversation history.'},
@@ -135,21 +161,14 @@ class AiBot:
         self.conversation.add_message_to_history('assistant', response_text)
         self.post_message(response_text)
 
-    def get_response_text(self, messages):
+    def get_response_text(self, messages, gptmodel="gpt-3.5-turbo"):
         self.post_message("Thinking...")
         response = self.openai.ChatCompletion.create(
-            model="gpt-3.5-turbo", 
+            model=gptmodel, 
             messages=messages,
             max_tokens=self.output_token_limit
         )
         response_text = response['choices'][0]['message']['content'].strip()
-        
-        # I don't think we need the below code. I was trying to force replace an indent with > for groupme
-        # since it looked funky in the iphone app. Will need to import re if we want to use it.
-        
-        # return re.sub(r'\n( {4})*', lambda match: '\n' + '>' * (len(match.group(0)) // 4), response_text)
-
-        # Replace three backticks or '```python' with 25 dashes on each line
         lines = response_text.splitlines()
         lines = ['-'*25 if line.startswith('```') else line for line in lines]
         response_text = '\n'.join(lines)
@@ -164,7 +183,17 @@ class AiBot:
             requests.post('https://api.groupme.com/v3/bots/post', params={'bot_id': AI_CHATBOTID, 'text': msg})
 
     def split_message_into_chunks(self, message, chunk_size=449):
-        return [message[i:i+chunk_size] for i in range(0, len(message), chunk_size)]
+        chunks = []
+        while len(message) > chunk_size:
+            last_period_index = message[:chunk_size].rfind('.')
+            if last_period_index == -1:
+                chunks.append(message[:chunk_size])
+                message = message[chunk_size:]
+            else:
+                chunks.append(message[:last_period_index + 1])  # Include the period in the chunk
+                message = message[last_period_index + 2:]  # Start the next chunk after the period and space
+        chunks.append(message)
+        return chunks
 
     def run(self, host='0.0.0.0', port=5080):
         self.app.run(host=host, port=port, debug=True)
