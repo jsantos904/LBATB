@@ -10,7 +10,7 @@ import tiktoken
 from config import OPENAI_API_KEY, AI_CHATBOTID
 
 SYSTEM_PROMPT = """
-Act as a Python teacher. Answer any python coding related questions as if the student is a beginner. Keep your answers short.
+Act as a programming teacher. Answer any programming coding related questions as if the student is a beginner. Keep your answers short.
 """
 HISTORY_TOKEN_LIMIT = 2000
 OUTPUT_TOKEN_LIMIT = 500
