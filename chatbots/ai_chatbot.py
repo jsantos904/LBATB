@@ -185,7 +185,7 @@ class AiBot:
     def split_message_into_chunks(self, message, chunk_size=449):
         chunks = []
         while len(message) > chunk_size:
-            last_period_index = message[:chunk_size].rfind('.')
+            last_period_index = message[:chunk_size].rfind('. ')
             if last_period_index == -1:
                 chunks.append(message[:chunk_size])
                 message = message[chunk_size:]
