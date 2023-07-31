@@ -109,8 +109,8 @@ class AiBot:
                 messages = [{'role': 'system', 'content': SYSTEM_PROMPT}]
                 messages.extend(last_two_items)
                 response_text = self.get_response_text(messages)
-                self.conversation.add_message_to_history('assistant', response_text)
-                self.post_message(response_text)
+                self.conversation.add_message_to_history('assistant', response_text[0])
+                self.post_message(response_text[0])
             else:
                 self.post_message('The last message was not an error.')
 
@@ -137,7 +137,9 @@ class AiBot:
             messages = [{'role': 'system', 'content': SYSTEM_PROMPT},
                         {'role': 'user', 'content': text}]
             response_text = self.get_response_text(messages, gptmodel = "gpt-4-0613")
-            self.post_message(response_text)
+            self.conversation.add_message_to_history('assistant', response_text[0])
+            self.post_message(response_text[0])
+            self.post_message(f'This response was generated using model: {response_text[1]}')
             self.gpt4_requests += 1
             if self.gpt4_requests == 1:
                 self.first_gpt4_request = current_time
@@ -158,8 +160,9 @@ class AiBot:
         messages = [{'role': 'system', 'content': SYSTEM_PROMPT}]
         messages.extend([{'role': m['role'], 'content': m['content']} for m in self.conversation.conversation_history])
         response_text = self.get_response_text(messages)
-        self.conversation.add_message_to_history('assistant', response_text)
-        self.post_message(response_text)
+        self.conversation.add_message_to_history('assistant', response_text[0])
+        self.post_message(response_text[0])
+        self.post_message(f'This response was generated using model: {response_text[1]}')
 
     def get_response_text(self, messages, gptmodel="gpt-3.5-turbo"):
         self.post_message("Thinking...")
@@ -172,7 +175,8 @@ class AiBot:
         lines = response_text.splitlines()
         lines = ['-'*25 if line.startswith('```') else line for line in lines]
         response_text = '\n'.join(lines)
-        return response_text
+        model = response['model']
+        return response_text, model
 
     def post_message(self, msg):
         if len(msg) > 449:
